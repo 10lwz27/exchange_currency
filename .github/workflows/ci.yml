@@ -46,10 +46,10 @@ jobs:
           unzip dependency-check-${VERSION}-release.zip
           chmod +x dependency-check/bin/dependency-check.sh
 
-      # 🌟 修正點：加上 --ossIndexDisabled true 參數，徹底杜絕 exit code 14 錯誤
       - name: Run Scan with Official CLI
         env:
           NVD_KEY: ${{ secrets.NVD_API_KEY }}
+          OSSINDEX_WARN_ONLY: 'true'
         run: |
           ./dependency-check/bin/dependency-check.sh \
             --project "currency-converter" \
@@ -57,8 +57,7 @@ jobs:
             --format "HTML" \
             --out "reports" \
             --failOnCVSS 9 \
-            --nvdApiKey "$NVD_KEY" \
-            --ossIndexDisabled true
+            --nvdApiKey "$NVD_KEY"
 
       - name: Upload OWASP reports
         uses: actions/upload-artifact@v4
