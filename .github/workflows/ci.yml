@@ -26,29 +26,39 @@ jobs:
           MY_APP_SECRET: ${{ secrets.APP_SECRET_KEY }}
         run: mvn test
 
-  trivy-scan:
-    name: Trivy Dependency Scan
+  dependency-check:
+    name: OWASP Dependency-Check Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. 直接在 Ubuntu 上下載並安裝官方最新穩定版 Trivy 執行檔
-      - name: Install Trivy CLI
-        run: |
-          sudo apt-get update && sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.details.d/trivy.list
-          # 建立乾淨的 list 資料夾並更新安裝
-          sudo mkdir -p /etc/apt/sources.list.d
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install -y trivy
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
-      # 2. 直接用官方純指令進行檔案系統掃描，並強制 exit 0 (100% 綠燈)
-      - name: Run Trivy Scan via CLI
-        run: |
-          trivy fs --vuln-type library --severity CRITICAL --format table --ignore-unfixed . || true
+      - name: Run OWASP Dependency-Check with API Key
+        uses: dependency-check/DependencyCheck-action@main
+        with:
+          project: 'currency-converter'
+          path: '.'
+          format: 'HTML'
+          out: 'reports'
+          # 🌟 核心改動：
+          # 1. 拿掉 --autoUpdate false (預設開啟自動更新，才能查到最新漏洞)
+          # 2. 加上 --nvdApiKey 參數，並將環境變數中的 NVD_API_KEY 餵給它
+          args: >
+            --failOnCVSS 9
+            --nvdApiKey ${{ secrets.NVD_API_KEY }}
+
+      - name: Upload OWASP reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owasp-dependency-reports
+          path: reports
 
   security-scan:
     name: ShiftLeft Security Scan
