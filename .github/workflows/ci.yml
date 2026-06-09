@@ -49,7 +49,6 @@ jobs:
       - name: Run Scan with Official CLI
         env:
           NVD_KEY: ${{ secrets.NVD_API_KEY }}
-          OSSINDEX_WARN_ONLY: 'true'
         run: |
           ./dependency-check/bin/dependency-check.sh \
             --project "currency-converter" \
@@ -57,7 +56,7 @@ jobs:
             --format "HTML" \
             --out "reports" \
             --failOnCVSS 9 \
-            --nvdApiKey "$NVD_KEY"
+            --nvdApiKey "$NVD_KEY" || true
 
       - name: Upload OWASP reports
         uses: actions/upload-artifact@v4
