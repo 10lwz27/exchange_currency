@@ -34,15 +34,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner in fs mode
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
           vuln-type: 'library'
           severity: 'CRITICAL'
+        env:
+          TRIVY_EXIT_CODE: '0'      
+          TRIVY_IGNORE_UNFIXED: 'true'
 
   security-scan:
     name: ShiftLeft Security Scan
