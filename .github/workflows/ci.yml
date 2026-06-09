@@ -39,6 +39,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      # 🌟 修正點：uses 必須精準拼成 dependency-check/DependencyCheck-action@main
       - name: Run OWASP Dependency-Check with API Key
         uses: dependency-check/DependencyCheck-action@main
         with:
@@ -46,9 +47,6 @@ jobs:
           path: '.'
           format: 'HTML'
           out: 'reports'
-          # 🌟 核心改動：
-          # 1. 拿掉 --autoUpdate false (預設開啟自動更新，才能查到最新漏洞)
-          # 2. 加上 --nvdApiKey 參數，並將環境變數中的 NVD_API_KEY 餵給它
           args: >
             --failOnCVSS 9
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
